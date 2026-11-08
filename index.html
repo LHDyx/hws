@@ -3,12 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>作业王v1.6.2</title>
+    <title>作业王v1.6.5</title>
     <link rel="icon" href="ico.png" type="image/jpeg">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="intro/intro.css">
 </head>
 <body>
-    <div class="header">作业王v1.6.2-大家的最爱</div>
+    <!-- 刷新动画：黑幕 + 书法字，放在 body 最前面避免首帧闪出页面 -->
+    <script src="intro/intro.js" data-auto data-logo="intro/assets/tingyuge.png" data-z-index="10000"></script>
+    <div class="header">作业王v1.6.5-大家的最爱</div>
+    <!-- 版本更新提示条 -->
+    <div id="update-banner" class="update-banner update-banner-hidden" role="region" aria-label="版本更新提示" aria-live="polite">
+        <div class="update-banner-main">
+            <span class="update-banner-text" id="update-banner-text"></span>
+            <button type="button" class="update-banner-dismiss" id="update-banner-dismiss">知道了</button>
+        </div>
+        <details class="update-banner-details" id="update-banner-details">
+            <summary>查看更新内容</summary>
+            <ul class="update-banner-notes" id="update-banner-notes"></ul>
+        </details>
+    </div>
     <!-- 公告展示区 -->
     <div id="notice-display" class="notice-display-hidden"></div>
     <!-- 公告居中弹窗 -->
@@ -98,103 +112,194 @@
     <!-- 悬浮球 -->
     <div id="floating-ball" role="button" tabindex="0" aria-label="打开操作菜单"></div>
 
-    <!-- 操作选择对话框 -->
+    <!-- hws操作面板 -->
     <div class="modal" id="operation-modal" role="dialog" aria-modal="true" aria-labelledby="operation-modal-title">
-        <div class="modal-content operation-modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title" id="operation-modal-title">选择操作</h2>
-                <button class="close-button" id="operation-close" aria-label="关闭操作菜单">&times;</button>
+        <div class="modal-content operation-panel-content">
+            <div class="modal-header operation-panel-header">
+                <h2 class="modal-title" id="operation-modal-title">hws操作面板</h2>
+                <button class="close-button" id="operation-close" aria-label="关闭操作面板">&times;</button>
             </div>
-            <div class="modal-footer modal-footer-column-stretch">
-                <button class="action-button add-button" id="op-add">添加作业</button>
-                <button class="action-button modify-button" id="op-modify">修改作业</button>
-                <button class="action-button delete-button" id="op-delete">删除作业</button>
-                <button class="action-button manage-button" id="op-manage">管理</button>
-                <button class="action-button manage-button" id="open-data-manage">数据管理</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 管理对话框 -->
-    <div class="modal" id="manage-modal" role="dialog" aria-modal="true" aria-labelledby="manage-modal-title">
-        <div class="modal-content manage-modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title" id="manage-modal-title">管理设置 <a href="#" id="about-link" class="about-inline-link">关于</a><a href="logs.html" id="logs-link" class="about-inline-link">日志</a><a href="settings.html" id="settings-link" class="about-inline-link">高级设置</a></h2>
-                <button class="close-button" id="manage-close" aria-label="关闭管理设置">&times;</button>
-            </div>
-            <div class="form-group form-group-spaced">
-                <label class="checkbox-row">
-                    <input type="checkbox" id="manage-ad-toggle-checkbox" class="checkbox-input-sm">
-                    <span>广告开关</span>
-                </label>
-            </div>
-            <div class="form-group form-group-spaced">
-                <label class="checkbox-row">
-                    <input type="checkbox" id="manage-liquid-glass-toggle-checkbox" class="checkbox-input-sm">
-                    <span>liquid glass开关</span>
-                </label>
-            </div>
-            <div class="form-group form-group-spaced">
-                <label class="checkbox-row">
-                    <input type="checkbox" id="manage-bottom-display-checkbox" class="checkbox-input-sm">
-                    <span>靠下显示</span>
-                </label>
-            </div>
-            <div class="form-group form-group-spaced">
-                <label class="checkbox-row">
-                    <input type="checkbox" id="manage-daily-clear-checkbox" class="checkbox-input-sm">
-                    <span>每日清空</span>
-                </label>
-            </div>
-            <div class="form-group form-group-spaced">
-                <label class="checkbox-row">
-                    <input type="checkbox" id="manage-easter-egg-checkbox" class="checkbox-input-sm">
-                    <span>彩蛋</span>
-                </label>
-                <div id="manage-messy-stew-group" class="nested-checkbox-group">
-                    <label class="checkbox-row">
-                        <input type="checkbox" id="manage-messy-stew-checkbox" class="checkbox-input-sm">
-                        <span>大乱炖</span>
-                    </label>
+            <div class="operation-panel-body">
+                <nav class="operation-panel-nav" role="tablist" aria-orientation="vertical" aria-label="操作选择">
+                    <button type="button" class="operation-tab is-active" role="tab" id="operation-tab-add" data-panel="add" aria-selected="true" aria-controls="operation-pane-add">添加作业</button>
+                    <button type="button" class="operation-tab" role="tab" id="operation-tab-modify" data-panel="modify" aria-selected="false" aria-controls="operation-pane-modify">修改作业</button>
+                    <button type="button" class="operation-tab" role="tab" id="operation-tab-delete" data-panel="delete" aria-selected="false" aria-controls="operation-pane-delete">删除作业</button>
+                    <button type="button" class="operation-tab" role="tab" id="operation-tab-manage" data-panel="manage" aria-selected="false" aria-controls="operation-pane-manage">管理</button>
+                    <button type="button" class="operation-tab" role="tab" id="operation-tab-data" data-panel="data" aria-selected="false" aria-controls="operation-pane-data">数据管理</button>
+                </nav>
+                <div class="operation-panel-panes">
+                    <!-- 添加作业 -->
+                    <section class="operation-pane is-active" id="operation-pane-add" data-pane="add" role="tabpanel" aria-labelledby="operation-tab-add">
+                        <div class="form-group">
+                            <label for="subject-select">选择科目</label>
+                            <select id="subject-select">
+                                <option value="chinese">语文</option>
+                                <option value="math">数学</option>
+                                <option value="english">英语</option>
+                                <option value="physics">物理</option>
+                                <option value="chemistry">化学</option>
+                                <option value="biology">生物</option>
+                                <option value="politics">政治</option>
+                                <option value="history">历史</option>
+                                <option value="geography">地理</option>
+                                <option value="technology">技术</option>
+                                <option value="other">其他</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="homework-input">作业内容</label>
+                            <input type="text" id="homework-input" placeholder="请输入作业内容">
+                            <div class="quick-preset-buttons" id="quick-preset-buttons">
+                                <button class="preset-button" data-text="选考">选考</button>
+                                <button class="preset-button" data-text="学考">学考</button>
+                                <button class="preset-button" data-text="全品">全品</button>
+                                <button class="preset-button" data-text="高效作业">高效作业</button>
+                                <button class="preset-button" data-text="步步高">步步高</button>
+                                <button class="preset-button" data-text="大本">大本</button>
+                                <button class="preset-button" data-text="小本">小本</button>
+                                <button class="preset-button" data-text="赢在微点">赢在微点</button>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="cancel-button" id="add-cancel-button">取消</button>
+                            <button class="submit-button" id="submit-homework">确定</button>
+                        </div>
+                    </section>
+                    <!-- 修改作业 -->
+                    <section class="operation-pane" id="operation-pane-modify" data-pane="modify" role="tabpanel" aria-labelledby="operation-tab-modify">
+                        <div class="form-group">
+                            <label for="modify-subject-select">选择科目</label>
+                            <select id="modify-subject-select">
+                                <option value="chinese">语文</option>
+                                <option value="math">数学</option>
+                                <option value="english">英语</option>
+                                <option value="physics">物理</option>
+                                <option value="chemistry">化学</option>
+                                <option value="biology">生物</option>
+                                <option value="politics">政治</option>
+                                <option value="history">历史</option>
+                                <option value="geography">地理</option>
+                                <option value="technology">技术</option>
+                                <option value="other">其他</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="homework-item-select">选择作业项</label>
+                            <select id="homework-item-select"></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="modify-homework-input">作业内容</label>
+                            <input type="text" id="modify-homework-input" placeholder="请输入修改后的作业内容">
+                        </div>
+                        <div class="modal-footer">
+                            <button class="cancel-button" id="modify-cancel-button">取消</button>
+                            <button class="submit-button" id="submit-modify">确定</button>
+                        </div>
+                    </section>
+                    <!-- 删除作业 -->
+                    <section class="operation-pane" id="operation-pane-delete" data-pane="delete" role="tabpanel" aria-labelledby="operation-tab-delete">
+                        <div class="form-group">
+                            <label for="delete-subject-select">选择科目</label>
+                            <select id="delete-subject-select">
+                                <option value="chinese">语文</option>
+                                <option value="math">数学</option>
+                                <option value="english">英语</option>
+                                <option value="physics">物理</option>
+                                <option value="chemistry">化学</option>
+                                <option value="biology">生物</option>
+                                <option value="politics">政治</option>
+                                <option value="history">历史</option>
+                                <option value="geography">地理</option>
+                                <option value="technology">技术</option>
+                                <option value="other">其他</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="delete-item-select">选择作业项</label>
+                            <select id="delete-item-select"></select>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="cancel-button" id="delete-cancel-button">取消</button>
+                            <button class="delete-confirm-button" id="confirm-delete">删除作业</button>
+                        </div>
+                    </section>
+                    <!-- 管理 -->
+                    <section class="operation-pane" id="operation-pane-manage" data-pane="manage" role="tabpanel" aria-labelledby="operation-tab-manage">
+                        <div class="operation-pane-links">
+                            <a href="#" id="about-link" class="about-inline-link">关于</a>
+                            <a href="logs.html" id="logs-link" class="about-inline-link">日志</a>
+                            <a href="settings.html" id="settings-link" class="about-inline-link">高级设置</a>
+                        </div>
+                        <div class="form-group form-group-spaced">
+                            <label class="checkbox-row">
+                                <input type="checkbox" id="manage-ad-toggle-checkbox" class="checkbox-input-sm">
+                                <span>广告开关</span>
+                            </label>
+                        </div>
+                        <div class="form-group form-group-spaced">
+                            <label class="checkbox-row">
+                                <input type="checkbox" id="manage-liquid-glass-toggle-checkbox" class="checkbox-input-sm">
+                                <span>liquid glass开关</span>
+                            </label>
+                        </div>
+                        <div class="form-group form-group-spaced">
+                            <label class="checkbox-row">
+                                <input type="checkbox" id="manage-bottom-display-checkbox" class="checkbox-input-sm">
+                                <span>靠下显示</span>
+                            </label>
+                        </div>
+                        <div class="form-group form-group-spaced">
+                            <label class="checkbox-row">
+                                <input type="checkbox" id="manage-daily-clear-checkbox" class="checkbox-input-sm">
+                                <span>每日清空</span>
+                            </label>
+                        </div>
+                        <div class="form-group form-group-spaced">
+                            <label class="checkbox-row">
+                                <input type="checkbox" id="manage-easter-egg-checkbox" class="checkbox-input-sm">
+                                <span>彩蛋</span>
+                            </label>
+                            <div id="manage-messy-stew-group" class="nested-checkbox-group">
+                                <label class="checkbox-row">
+                                    <input type="checkbox" id="manage-messy-stew-checkbox" class="checkbox-input-sm">
+                                    <span>大乱炖</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group form-group-spaced">
+                            <label class="checkbox-row">
+                                <input type="checkbox" id="manage-fast-animation-checkbox" class="checkbox-input-sm">
+                                <span>加快动画速度</span>
+                            </label>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="submit-button" id="manage-save">保存设置</button>
+                            <button class="cancel-button" id="manage-cancel">取消</button>
+                        </div>
+                    </section>
+                    <!-- 数据管理 -->
+                    <section class="operation-pane" id="operation-pane-data" data-pane="data" role="tabpanel" aria-labelledby="operation-tab-data">
+                        <div class="form-group">
+                            <label class="data-manage-section-title">导出数据</label>
+                            <div class="data-manage-actions-row">
+                                <button type="button" class="submit-button" id="copy-data-button">复制</button>
+                                <button type="button" class="submit-button" id="download-data-button">下载</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="data-manage-section-title" for="data-import-textarea">导入数据</label>
+                            <textarea id="data-import-textarea" class="data-manage-textarea" placeholder="请粘贴导出的 JSON 数据"></textarea>
+                            <input type="file" id="data-import-file" accept=".json,application/json" hidden>
+                            <div class="data-manage-actions-row">
+                                <button type="button" class="cancel-button" id="load-data-file-button">从文件导入</button>
+                                <button type="button" class="submit-button" id="apply-import-button">导入</button>
+                            </div>
+                        </div>
+                        <div class="form-group form-group-spaced">
+                            <button type="button" class="action-button clear-cache-button data-manage-entry-button" id="op-clear-cache">清空缓存</button>
+                        </div>
+                    </section>
                 </div>
-            </div>
-            <div class="form-group form-group-spaced">
-                <label class="checkbox-row">
-                    <input type="checkbox" id="manage-fast-animation-checkbox" class="checkbox-input-sm">
-                    <span>加快动画速度</span>
-                </label>
-            </div>
-            <div class="modal-footer">
-                <button class="submit-button" id="manage-save">保存设置</button>
-                <button class="cancel-button" id="manage-cancel">取消</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal" id="data-manage-modal" role="dialog" aria-modal="true" aria-labelledby="data-manage-title">
-        <div class="modal-content data-manage-modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title" id="data-manage-title">数据管理</h2>
-                <button class="close-button" id="data-manage-close" aria-label="关闭数据管理">&times;</button>
-            </div>
-            <div class="form-group">
-                <label class="data-manage-section-title">导出数据</label>
-                <div class="data-manage-actions-row">
-                    <button type="button" class="submit-button" id="copy-data-button">复制</button>
-                    <button type="button" class="submit-button" id="download-data-button">下载</button>
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="data-manage-section-title" for="data-import-textarea">导入数据</label>
-                <textarea id="data-import-textarea" class="data-manage-textarea" placeholder="请粘贴导出的 JSON 数据"></textarea>
-                <input type="file" id="data-import-file" accept=".json,application/json" hidden>
-                <div class="data-manage-actions-row">
-                    <button type="button" class="cancel-button" id="load-data-file-button">从文件导入</button>
-                    <button type="button" class="submit-button" id="apply-import-button">导入</button>
-                </div>
-            </div>
-            <div class="form-group form-group-spaced">
-                <button type="button" class="action-button clear-cache-button data-manage-entry-button" id="op-clear-cache">清空缓存</button>
             </div>
         </div>
     </div>
@@ -256,121 +361,6 @@
         <button class="action-button delete-button" id="delete-homework-btn">删除作业</button>
     </div>
     
-    <!-- 添加作业模态框 -->
-    <div class="modal" id="add-homework-modal" role="dialog" aria-modal="true" aria-labelledby="add-homework-title">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title" id="add-homework-title">添加新作业</h2>
-                <button class="close-button" aria-label="关闭添加作业">&times;</button>
-            </div>
-            <div class="form-group">
-                <label for="subject-select">选择科目</label>
-                <select id="subject-select">
-                    <option value="chinese">语文</option>
-                    <option value="math">数学</option>
-                    <option value="english">英语</option>
-                    <option value="physics">物理</option>
-                    <option value="chemistry">化学</option>
-                    <option value="biology">生物</option>
-                    <option value="politics">政治</option>
-                    <option value="history">历史</option>
-                    <option value="geography">地理</option>
-                    <option value="technology">技术</option>
-                    <option value="other">其他</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="homework-input">作业内容</label>
-                <input type="text" id="homework-input" placeholder="请输入作业内容">
-                <div class="quick-preset-buttons" id="quick-preset-buttons">
-                    <button class="preset-button" data-text="选考">选考</button>
-                    <button class="preset-button" data-text="学考">学考</button>
-                    <button class="preset-button" data-text="全品">全品</button>
-                    <button class="preset-button" data-text="高效作业">高效作业</button>
-                    <button class="preset-button" data-text="步步高">步步高</button>
-                    <button class="preset-button" data-text="大本">大本</button>
-                    <button class="preset-button" data-text="小本">小本</button>
-                    <button class="preset-button" data-text="赢在微点">赢在微点</button>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="cancel-button" id="add-cancel-button">取消</button>
-                <button class="submit-button" id="submit-homework">确定</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- 修改作业模态框 -->
-    <div class="modal" id="modify-homework-modal" role="dialog" aria-modal="true" aria-labelledby="modify-homework-title">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title" id="modify-homework-title">修改作业</h2>
-                <button class="close-button" aria-label="关闭修改作业">&times;</button>
-            </div>
-            <div class="form-group">
-                <label for="modify-subject-select">选择科目</label>
-                <select id="modify-subject-select">
-                    <option value="chinese">语文</option>
-                    <option value="math">数学</option>
-                    <option value="english">英语</option>
-                    <option value="physics">物理</option>
-                    <option value="chemistry">化学</option>
-                    <option value="biology">生物</option>
-                    <option value="politics">政治</option>
-                    <option value="history">历史</option>
-                    <option value="geography">地理</option>
-                    <option value="technology">技术</option>
-                    <option value="other">其他</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="homework-item-select">选择作业项</label>
-                <select id="homework-item-select"></select>
-            </div>
-            <div class="form-group">
-                <label for="modify-homework-input">作业内容</label>
-                <input type="text" id="modify-homework-input" placeholder="请输入修改后的作业内容">
-            </div>
-            <div class="modal-footer">
-                <button class="cancel-button" id="modify-cancel-button">取消</button>
-                <button class="submit-button" id="submit-modify">确定</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- 删除作业模态框 -->
-    <div class="modal" id="delete-homework-modal" role="dialog" aria-modal="true" aria-labelledby="delete-homework-title">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title" id="delete-homework-title">删除作业</h2>
-                <button class="close-button" aria-label="关闭删除作业">&times;</button>
-            </div>
-            <div class="form-group">
-                <label for="delete-subject-select">选择科目</label>
-                <select id="delete-subject-select">
-                    <option value="chinese">语文</option>
-                    <option value="math">数学</option>
-                    <option value="english">英语</option>
-                    <option value="physics">物理</option>
-                    <option value="chemistry">化学</option>
-                    <option value="biology">生物</option>
-                    <option value="politics">政治</option>
-                    <option value="history">历史</option>
-                    <option value="geography">地理</option>
-                    <option value="technology">技术</option>
-                    <option value="other">其他</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="delete-item-select">选择作业项</label>
-                <select id="delete-item-select"></select>
-            </div>
-            <div class="modal-footer">
-                <button class="cancel-button" id="delete-cancel-button">取消</button>
-                <button class="delete-confirm-button" id="confirm-delete">删除作业</button>
-            </div>
-        </div>
-    </div>
 
     <!-- 清空缓存确认弹窗 -->
     <div class="modal" id="clear-cache-modal" role="dialog" aria-modal="true" aria-labelledby="clear-cache-title">
@@ -397,7 +387,7 @@
                 <button class="close-button" id="about-close" aria-label="关闭关于弹窗">&times;</button>
             </div>
             <div class="form-group about-links-group">
-                <p class="about-section-body about-section-body-first">version: 1.6.2</p>
+                <p class="about-section-body about-section-body-first">version: 1.6.5</p>
                 <p class="about-section-title">开源协议</p>
                 <p class="about-section-body">Apache License 2.0</p>
                 <p class="about-section-note">允许使用、修改与分发，具体条款以项目根目录 LICENSE 文件为准。</p>
@@ -420,6 +410,30 @@
                 </div>
                 <p class="about-section-title">更新日志</p>
                 <div class="about-changelog">
+                    <section class="about-changelog-entry">
+                        <h3 class="about-changelog-version">1.6.5</h3>
+                        <ul class="about-changelog-list">
+                            <li>「搞」悬浮球改为 hws 操作面板</li>
+                            <li>左侧选择操作、右侧执行操作，纯白双栏布局</li>
+                            <li>添加/修改/删除作业、管理、数据管理整合进面板</li>
+                            <li>刷新页面时播放黑幕书法字动画</li>
+                        </ul>
+                    </section>
+                    <section class="about-changelog-entry">
+                        <h3 class="about-changelog-version">1.6.4</h3>
+                        <ul class="about-changelog-list">
+                            <li>新增本地更新检测与 update.json 版本公告</li>
+                            <li>新增顶部更新提示条，展示更新内容</li>
+                            <li>每个版本只提示一次，清空缓存后重新提示</li>
+                        </ul>
+                    </section>
+                    <section class="about-changelog-entry">
+                        <h3 class="about-changelog-version">1.6.3</h3>
+                        <ul class="about-changelog-list">
+                            <li>移除弹窗出现时的全局变暗与背景模糊遮罩</li>
+                            <li>弹窗出现时背景页面保持清晰可见</li>
+                        </ul>
+                    </section>
                     <section class="about-changelog-entry">
                         <h3 class="about-changelog-version">1.6.2</h3>
                         <ul class="about-changelog-list">

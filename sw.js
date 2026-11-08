@@ -1,7 +1,7 @@
-// Service Worker for 作业王 v1.6.2 - 缓存管理
+// Service Worker for 作业王 v1.6.5 - 缓存管理
 // HTML 使用 Network-First，静态资源使用 Cache-First
 
-const CACHE_NAME = 'homework-king-v1.6.2';
+const CACHE_NAME = 'homework-king-v1.6.5';
 const CORE_ASSETS = [
     './',
     './index.html',
@@ -15,7 +15,10 @@ const CORE_ASSETS = [
     './settings.html',
     './settings.css',
     './settings.js',
-    './title-parse.js'
+    './title-parse.js',
+    './intro/intro.css',
+    './intro/intro.js',
+    './intro/assets/tingyuge.png'
 ];
 const OPTIONAL_ASSETS = [
     './img/ad01.png',
@@ -67,6 +70,16 @@ self.addEventListener('fetch', function (event) {
 
     if (requestUrl.origin !== self.location.origin) return;
     if (event.request.method !== 'GET') return;
+
+    // 更新公告始终走网络，且不写入缓存，避免读到旧版本
+    if (requestUrl.pathname.endsWith('/update.json')) {
+        event.respondWith(
+            fetch(event.request, { cache: 'no-store' }).catch(function () {
+                return new Response('', { status: 503, statusText: 'Offline' });
+            })
+        );
+        return;
+    }
 
     var isHtmlRequest = event.request.mode === 'navigate' ||
         requestUrl.pathname === '/' ||

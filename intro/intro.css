@@ -1,0 +1,156 @@
+/* ==========================================================================
+   黑幕 · 书法字 开启动画 / 刷新动画（可复用版）
+   --------------------------------------------------------------------------
+   · 由 intro.js 现场创建节点，本文件只负责外观与时间轴，无需手写 HTML。
+   · 类名统一用 xy- 前缀，关键帧统一用 xy-intro- 前缀，放进任何项目都不会
+     和原有样式撞名。
+   · 时间轴唯一来源是下面三个变量：进 --xy-intro-in · 停 --xy-intro-hold ·
+     出 --xy-intro-out，合计 2980ms。JS 的兜底时长从计算样式读取，不重复写死。
+   · 动画起点是「素材就位」：书法图完全加载后 JS 才写 data-ready="1"，
+     而 .xy-intro-mark 的静态状态就是进动画的第 0 帧（最小 + 全透明），
+     所以置位那一刻没有任何跳变，也不会出现「动画播完了图才到」。
+   ========================================================================== */
+
+.xy-intro {
+  /* 时间轴（可被内联样式或 :root 覆盖） */
+  --xy-intro-in: 520ms;
+  --xy-intro-hold: 2000ms;
+  --xy-intro-out: 460ms;
+  /* 定格尺寸：默认按 tingyuge.png（1800 × 800）的观感调校 */
+  --xy-intro-width: min(52vmin, 420px);
+  /* 层级：盖住页面首帧，但低于你自己的紧急弹窗时可以调小 */
+  --xy-intro-z: 120;
+  /* 书法图默认压成纯白：原图是墨色，铺在黑幕上几乎看不见；
+     换成彩色 / 浅色素材时把这里改成 none */
+  --xy-intro-logo-filter: brightness(0) invert(1) drop-shadow(0 0 24px rgba(255, 255, 255, 0.18));
+  --xy-intro-sign-color: rgba(255, 255, 255, 0.5);
+
+  position: fixed;
+  inset: 0;
+  z-index: var(--xy-intro-z);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  /* 刻意不设背景：开启动画的黑幕来自 .xy-intro-curtain（静态全黑），
+     刷新动画需要根节点保持透明，让 .xy-intro-curtain 由全透明淡入 ——
+     根节点一黑，「淡入」就看不见了（JS 只在 boot 模式写内联黑底兜底） */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* 收尾信号：长度 = 进 + 停 + 出。走完时 visibility 变 hidden，
+   JS 收到 animationend 后把节点整个摘掉（另有计时器兜底）。 */
+.xy-intro[data-ready="1"] {
+  animation: xy-intro-life calc(var(--xy-intro-in) + var(--xy-intro-hold) + var(--xy-intro-out)) linear forwards;
+}
+
+/* 只为收尾信号存在：visibility 一路 visible，最后一刻变 hidden */
+@keyframes xy-intro-life {
+  from { visibility: visible; }
+  to { visibility: hidden; }
+}
+
+/* ---------- 黑幕 ---------- */
+.xy-intro-curtain {
+  position: absolute;
+  inset: 0;
+  background: #000;
+}
+
+/* 两种动画共用黑幕淡出 */
+.xy-intro[data-ready="1"] .xy-intro-curtain {
+  animation: xy-intro-curtain-out var(--xy-intro-out) ease-out calc(var(--xy-intro-in) + var(--xy-intro-hold)) forwards;
+}
+
+/* 刷新动画：黑幕与图同时出现 —— 两者时长同为 --xy-intro-in，
+   图长到定格尺寸的那一刻黑幕刚好完全不透明 */
+.xy-intro[data-ready="1"][data-mode="refresh"] .xy-intro-curtain {
+  animation:
+    xy-intro-curtain-in var(--xy-intro-in) linear forwards,
+    xy-intro-curtain-out var(--xy-intro-out) ease-out calc(var(--xy-intro-in) + var(--xy-intro-hold)) forwards;
+}
+
+/* 等素材期间（尚未 data-ready）刷新动画的黑幕保持全透明 —— 与第 0 帧一致，
+   置位时不会「先黑一下再变透明」；开启动画的黑幕本来就是静态全黑 */
+.xy-intro[data-mode="refresh"]:not([data-ready="1"]) .xy-intro-curtain {
+  opacity: 0;
+}
+
+@keyframes xy-intro-curtain-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes xy-intro-curtain-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* ---------- 会整体缩放的那一块：书法图 + 署名小字 ---------- */
+.xy-intro-mark {
+  position: relative;
+  width: var(--xy-intro-width);
+  /* 素材加载完成前保持最小：静态状态 = 进动画的第 0 帧 */
+  transform: scale(0.02);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.xy-intro[data-ready="1"] .xy-intro-mark {
+  transform: scale(1);
+  animation:
+    xy-intro-logo-in var(--xy-intro-in) cubic-bezier(0.16, 0.84, 0.24, 1) forwards,
+    xy-intro-logo-out var(--xy-intro-out) cubic-bezier(0.55, 0, 0.85, 0.4) calc(var(--xy-intro-in) + var(--xy-intro-hold)) forwards;
+}
+
+/* 过场变体：xiaoyao.png 原图 1129 × 652（1.73:1），比 tingyuge（2.25:1）更高，
+   沿用同一宽度会显得「胖」，所以只把定格宽度调小一档，时间轴与关键帧完全不变。
+   写在变量上，而不是直接写 width —— 这样 JS 传 width 选项（内联变量）仍然能覆盖它 */
+.xy-intro.is-screen {
+  --xy-intro-width: min(46vmin, 360px);
+}
+
+/* ---------- 书法图 ---------- */
+.xy-intro-logo {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: var(--xy-intro-logo-filter);
+}
+
+/* ---------- 署名小字（可选） ----------
+   绝对定位：不参与 .xy-intro-mark 的高度，因此书法字仍严格居中；
+   它在 mark 内，所以会跟着书法字一起缩放 / 淡出 */
+.xy-intro-sign {
+  position: absolute;
+  top: calc(100% + 7px);
+  right: 1px;
+  margin: 0;
+  font-size: clamp(9px, 2.4vmin, 12px);
+  line-height: 1;
+  letter-spacing: 0.06em;
+  /* 人名之间拉开间距（默认空格约 0.25em，加上 0.7em 后约 0.95em） */
+  word-spacing: 0.7em;
+  color: var(--xy-intro-sign-color);
+  white-space: nowrap;
+}
+
+/* 进：由一个小点快速变大（前 28% 点亮，所以看起来是从无到有长出来） */
+@keyframes xy-intro-logo-in {
+  from { transform: scale(0.02); opacity: 0; }
+  28% { opacity: 1; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* 出：再快速放大（1 → 3.4 倍）并与黑幕一起淡出 */
+@keyframes xy-intro-logo-out {
+  from { transform: scale(1); opacity: 1; }
+  to { transform: scale(3.4); opacity: 0; }
+}
+
+/* 系统要求「减少动态效果」：不播（JS 也会直接跳过创建节点） */
+@media (prefers-reduced-motion: reduce) {
+  .xy-intro { display: none; }
+}

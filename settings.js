@@ -2,9 +2,9 @@
     var Logs = window.LogsCore;
     var TitleParse = window.TitleParse;
 
-    // 版本号取自页面标题「作业王v1.6.2 - 高级设置」，与 app.js 保持同步
+    // 版本号取自页面标题「作业王v1.6.5 - 高级设置」，与 app.js 保持同步
     var versionMatch = document.title.match(/v([\d.]+)/);
-    var APP_VERSION = versionMatch ? versionMatch[1] : '1.6.2';
+    var APP_VERSION = versionMatch ? versionMatch[1] : '1.6.5';
 
     function getSetting(key) {
         var v = localStorage.getItem(key);
